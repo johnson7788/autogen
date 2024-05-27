@@ -15,8 +15,6 @@ from websockets.sync.client import connect as ws_connect
 import autogen
 from autogen.io.websockets import IOWebsockets
 
-PORT = 8000
-
 # logger = getLogger(__name__)
 logger = logging.getLogger("uvicorn")
 
@@ -28,7 +26,7 @@ def _get_config_list() -> List[Dict[str, str]]:
         List[Dict[str, str]]: A list of config dictionaries with API keys.
 
     Example:
-        >>> _get_config_list()
+        _get_config_list()
         [
             {
                 'model': 'gpt-35-turbo-16k',
@@ -46,15 +44,9 @@ def _get_config_list() -> List[Dict[str, str]]:
     # can use both OpenAI and Azure OpenAI API keys
     config_list = [
         {
-            "model": "gpt-35-turbo-16k",
-            "api_key": os.environ.get("AZURE_OPENAI_API_KEY"),
-            "base_url": os.environ.get("AZURE_OPENAI_BASE_URL"),
-            "api_type": "azure",
-            "api_version": os.environ.get("AZURE_OPENAI_API_VERSION"),
-        },
-        {
-            "model": "gpt-4",
-            "api_key": os.environ.get("OPENAI_API_KEY"),
+            'model': 'gpt-3.5-turbo',
+            'api_key': os.getenv('ANY_WHERE_KEY'),
+            'base_url': 'https://api.chatanywhere.tech/v1',
         },
     ]
     # filter out configs with no API key
@@ -131,7 +123,7 @@ html = """
         <ul id='messages'>
         </ul>
         <script>
-            var ws = new WebSocket("ws://localhost:8080/ws");
+            var ws = new WebSocket("ws://192.168.50.209:8080/ws");
             ws.onmessage = function(event) {
                 var messages = document.getElementById('messages')
                 var message = document.createElement('li')
@@ -153,7 +145,7 @@ html = """
 
 @asynccontextmanager
 async def run_websocket_server(app: FastAPI) -> AsyncIterator[None]:
-    with IOWebsockets.run_server_in_thread(on_connect=on_connect, port=8080) as uri:
+    with IOWebsockets.run_server_in_thread(on_connect=on_connect, host="0.0.0.0", port=8080) as uri:
         logger.info(f"Websocket server started at {uri}.")
 
         yield
@@ -168,7 +160,7 @@ async def get() -> HTMLResponse:
 
 
 async def start_uvicorn() -> None:
-    config = uvicorn.Config(app)
+    config = uvicorn.Config(app,host="0.0.0.0",port=8000)
     server = uvicorn.Server(config)
     try:
         await server.serve()  # noqa: F704
